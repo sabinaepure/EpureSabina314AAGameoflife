@@ -5,3 +5,4 @@
 -gameoflife cu tast1 si 2(care ruleaza) <br>
 -task 3 (care nu ruleaza cum as vrea eu) <br>
 -si un gol.c cu task 1 si task 2 mai basic nu se foloseste de python <br>
+
