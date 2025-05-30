@@ -1,6 +1,8 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+
+
 #include <dirent.h>
 #include <sys/stat.h>
 
@@ -219,7 +221,7 @@ int main(int argc, char *argv[])
     char *input_folder = argv[1];
     char *output_folder = argv[2];
 
-    // Creează folderul de output dacă nu există
+    // creeaza folderul de output dacă nu există
     struct stat st = {0};
     if (stat(output_folder, &st) == -1)
     {
@@ -236,17 +238,17 @@ int main(int argc, char *argv[])
     struct dirent *entry;
     while ((entry = readdir(dir)) != NULL)
     {
-        // Ignorăm "." și ".."
+        // ignor "." și ".."
         if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
         {
             continue;
         }
 
-        // Construim calea completă pentru fișierul de input
+        // construire path input 
         char input_path[512];
         snprintf(input_path, sizeof(input_path), "%s/%s", input_folder, entry->d_name);
 
-        // Construim calea completă pentru fișierul de output
+        // path output
         char output_path[512];
         snprintf(output_path, sizeof(output_path), "%s/%s.out", output_folder, entry->d_name);
 

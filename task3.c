@@ -1,283 +1,67 @@
+#include"task3.h"
+
+/*
 // biblioteci standard
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <dirent.h>
 
+//pt easy reading se muta functiile in task3.h
+//#include "task3.h"
+
 // biblioteci pt python checker
 #include <sys/stat.h>
 #include <sys/types.h>
+*/
 
 // task1
 // numara cate celule in viata se afla langa a[i][j]
-int isalive(char **a, int n, int m, int i, int j)
-{
-    int alive = 0;
-    int linieindex, coloanaindex;
-    int linievecina, coloanavecina;
-    for (linieindex = -1; linieindex <= 1; linieindex++)
-    {
-        for (coloanaindex = -1; coloanaindex <= 1; coloanaindex++)
-        {
-            if (coloanaindex == 0 && linieindex == 0)
-            {
-                continue;
-            }
-            linievecina = i + linieindex;
-            coloanavecina = j + coloanaindex;
-            if (linievecina >= 0 && coloanavecina >= 0 && linievecina < n && coloanavecina < m)
-            {
-                if (a[linievecina][coloanavecina] == 'X')
-                {
-                    alive++;
-                }
-            }
-        }
-    }
-    return alive;
-}
+int isalive(char **a, int n, int m, int i, int j);
+
 
 // simularea cerintei de la task1
-void simulare(char **a, char **b, int n, int m)
-{
-    int i, j;
-    for (i = 0; i < n; i++)
-    {
-        for (j = 0; j < m; j++)
-        {
-
-            int vecini;
-            vecini = isalive(a, n, m, i, j);
-            if (a[i][j] == 'X')
-            {
-                if (vecini < 2 || vecini > 3)
-                {
-                    b[i][j] = '+';
-                }
-                else
-                {
-                    b[i][j] = 'X';
-                }
-            }
-            else
-            {
-                if (vecini == 3)
-                {
-                    b[i][j] = 'X';
-                }
-                else
-                {
-                    b[i][j] = '+';
-                }
-            }
-        }
-    }
-}
+void simulare(char **a, char **b, int n, int m);
 
 // aloca matrice
-char **newmatrix(int n, int m)
-{
-    char **a = (char **)malloc(n * sizeof(char *));
-    int i;
-    for (i = 0; i < n; i++)
-    {
-        a[i] = (char *)malloc((m + 1) * sizeof(char)); // '\0'
-    }
-    return a;
-}
+char **newmatrix(int n, int m);
 
-void readmatrix(FILE *f, char **a, int n, int m)
-{
-    int i;
-    for (i = 0; i < n; i++)
-    {
-        fgets(a[i], m + 2, f);
-        a[i][strcspn(a[i], "\n")] = '\0';
-    }
-}
+void readmatrix(FILE *f, char **a, int n, int m);
 
-void showmatrix(FILE *f, int n, char **a)
-{
-    int i;
-    for (i = 0; i < n; i++)
-    {
-        fprintf(f, "%s\n", a[i]);
-    }
-    fprintf(f, "\n");
-}
+void showmatrix(FILE *f, int n, char **a);
 
-void freematrix(char **a, int n)
-{
-    for (int i = 0; i < n; i++)
-    {
-        free(a[i]);
-    }
-    free(a);
-}
+void freematrix(char **a, int n);
 
-// Lista celulelor modificate
-typedef struct celula
-{
-    int linie;
-    int coloana;
-    struct celula *next;
-} cell;
+cell *diferences(char **a, char **b, int n, int m);
 
-cell *diferences(char **a, char **b, int n, int m)
-{
-    cell *cap = NULL;
-    cell *ultim = NULL;
-    for (int i = 0; i < n; i++)
-    {
-        for (int j = 0; j < m; j++)
-        {
-            if (a[i][j] != b[i][j])
-            {
-                cell *nou = malloc(sizeof(cell));
-                nou->linie = i;
-                nou->coloana = j;
-                nou->next = NULL;
-                if (!cap)
-                    cap = nou;
-                else
-                    ultim->next = nou;
-                ultim = nou;
-            }
-        }
-    }
-    return cap;
-}
+void freecell(cell *cap);
 
-void freecell(cell *cap)
-{
-    while (cap)
-    {
-        cell *temp = cap;
-        cap = cap->next;
-        free(temp);
-    }
-}
 
-char **copyMatrix(char **src, int n, int m)
-{
-    char **dest = newmatrix(n, m);
-    for (int i = 0; i < n; i++)
-        strcpy(dest[i], src[i]);
-    return dest;
-}
+char **copyMatrix(char **src, int n, int m);
 
-// Structura nod arbore
-typedef struct Node
-{
-    char **matrix;
-    int n, m;
-    int nrgen;
-    cell *differences;  // lista celule modificate față de părintele nodului
-    struct Node *left;  // regula nouă (simulareleft)
-    struct Node *right; // regula clasică (simulare)
-} Node;
 
-// Declarația funcției simulareleft
 void simulareleft(char **a, char **b, int n, int m);
 
-Node *buildtree(char **parent_matrix, char **current_matrix, int n, int m, int currentLevel, int maxLevel)
-{
-    Node *node = malloc(sizeof(Node));
-    node->nrgen = currentLevel;
-    node->n = n;
-    node->m = m;
-    node->left = NULL;
-    node->right = NULL;
+Node *buildtree(char **parent_matrix, char **current_matrix, int n, int m, int currentLevel, int maxLevel);
 
-    node->matrix = copyMatrix(current_matrix, n, m);
 
-    // Calculăm diferențele față de matricea părinte (dacă există)
-    if (parent_matrix == NULL)
-    {
-        node->differences = NULL; // pentru rădăcină nu avem diferențe față de părinte
-    }
-    else
-    {
-        node->differences = diferences(parent_matrix, current_matrix, n, m);
-    }
+void preorder_print_differences(FILE *f, Node *node);
 
-    if (currentLevel == maxLevel)
-        return node;
 
-    // Calculăm matricele pentru copiii stâng și drept
-    char **left_matrix = newmatrix(n, m);
-    char **right_matrix = newmatrix(n, m);
-
-    simulareleft(current_matrix, left_matrix, n, m);
-    node->left = buildtree(current_matrix, left_matrix, n, m, currentLevel + 1, maxLevel);
-
-    simulare(current_matrix, right_matrix, n, m);
-    node->right = buildtree(current_matrix, right_matrix, n, m, currentLevel + 1, maxLevel);
-
-    freematrix(left_matrix, n);
-    freematrix(right_matrix, n);
-
-    return node;
-}
-
-void preorder_print_differences(FILE *f, Node *node)
-{
-    if (!node)
-        return;
-
-    // afișăm diferențele din acest nod (nivel, celule modificate)
-    cell *c = node->differences;
-    while (c)
-    {
-        fprintf(f, "%d %d %d\n", node->nrgen, c->linie, c->coloana);
-        c = c->next;
-    }
-
-    preorder_print_differences(f, node->left);
-    preorder_print_differences(f, node->right);
-}
-
-// simulare pt task 3 partea din stanga a arborelui
-void simulareleft(char **a, char **b, int n, int m)
-{
-    int i, j;
-    for (i = 0; i < n; i++)
-    {
-        for (j = 0; j < m; j++)
-        {
-            int vecini = isalive(a, n, m, i, j);
-            if (vecini == 2)
-                b[i][j] = 'X';
-            else
-                b[i][j] = '+';
-        }
-    }
-}
-
-void freetree(Node *node)
-{
-    if (!node)
-        return;
-
-    freematrix(node->matrix, node->n);
-    freecell(node->differences);
-    freetree(node->left);
-    freetree(node->right);
-    free(node);
-}
+void freetree(Node *node);
 
 int main(int argc, char *argv[])
 {
     if (argc != 3)
     {
-        printf("Utilizare: %s <folder inputs> <folder outputs>\n", argv[0]);
+        printf("utilizare: %s <folder inputs> <folder outputs>\n", argv[0]);
         return 1;
     }
 
     char *input_folder = argv[1];
     char *output_folder = argv[2];
 
-    // Creează folderul de output dacă nu există
+    // face output daca nu exista deja
     struct stat st = {0};
     if (stat(output_folder, &st) == -1)
     {
@@ -298,7 +82,7 @@ int main(int argc, char *argv[])
     struct dirent *entry;
     while ((entry = readdir(dir)) != NULL)
     {
-        // Ignorăm "." și ".."
+        // ignor "." și ".."
         if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
         {
             continue;
@@ -338,13 +122,13 @@ int main(int argc, char *argv[])
         char **a = newmatrix(n, m);
         readmatrix(input, a, n, m);
 
-        // Construim arborele începând de la matricea inițială
+        
         Node *root = buildtree(NULL, a, n, m, 0, gen);
 
-        // Afișăm diferențele în preorder în fișierul de output
+       
         preorder_print_differences(output, root);
 
-        // Curățăm memoria
+        
         freematrix(a, n);
         freetree(root);
 
